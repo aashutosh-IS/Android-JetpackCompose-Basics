@@ -1,5 +1,6 @@
 package com.infoshapers.profile_card
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -7,6 +8,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
@@ -19,8 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
+import coil.transform.CircleCropTransformation
 import com.infoshapers.profile_card.ui.theme.MyTheme
 import com.infoshapers.profile_card.ui.theme.lightGreen
 
@@ -29,38 +34,25 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyTheme() {
-                MainScreen()
+                UserListScreen()
             }
         }
     }
 }
 
 @Composable
-fun MainScreen(userProfileList: List<UserProfileDataClass> = UserProfileList) {
-    Scaffold(topBar = {
-        AppBar()
-    }) {
-        androidx.compose.material.Surface(
+fun UserListScreen(userProfiles: List<UserProfileDataClass> = UserProfileList) {
+    Scaffold(topBar = { AppBar() }) {
+        Surface(
             modifier = Modifier.fillMaxSize(),
         ) {
-//            Column {
-//                for (user in userProfileList) {
-//                    ProfileCard(user)
-//
-//                }
-//            }
-
             LazyColumn {
-                itemsIndexed(userProfileList) { _, item ->
-                    ProfileCard(userProfileDataClass = item)
-
-
+                items(userProfiles) { userProfile ->
+                    ProfileCard(userProfile = userProfile)
                 }
             }
-
         }
     }
-
 }
 
 @Composable
@@ -68,93 +60,126 @@ fun AppBar() {
     TopAppBar(
         navigationIcon = {
             Icon(
-                Icons.Default.Home, contentDescription = "asd",
-                Modifier.padding(horizontal = 8.dp)
+                Icons.Default.Home,
+                contentDescription = "",
+                modifier = Modifier.padding(horizontal = 12.dp),
             )
         },
-        title = {
-            Text(text = "Messaging Users")
-        },
+        title = { Text("Messaging Application users") }
     )
-
 }
 
 @Composable
-fun ProfileCard(userProfileDataClass: UserProfileDataClass) {
+fun ProfileCard(userProfile: UserProfileDataClass) {
     Card(
         modifier = Modifier
             .padding(top = 8.dp, bottom = 4.dp, start = 16.dp, end = 16.dp)
             .fillMaxWidth()
-            .wrapContentHeight(align = Alignment.Top), elevation = 8.dp,
+            .wrapContentHeight(align = Alignment.Top),
+        elevation = 8.dp,
         backgroundColor = Color.White
-
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            ProfilePicture(userProfileDataClass.pictureUrl, userProfileDataClass.status)
-            ProfileContent(userProfileDataClass.name, userProfileDataClass.status)
-
+            ProfilePicture(userProfile.pictureUrl, userProfile.status, 72.dp)
+            ProfileContent(userProfile.name, userProfile.status, Alignment.Start)
         }
+
     }
 }
 
 @Composable
-fun ProfilePicture(pictureUrl: String, status: Boolean) {
+fun ProfilePicture(pictureUrl: String, onlineStatus: Boolean, imageSize: Dp) {
     Card(
         shape = CircleShape,
         border = BorderStroke(
             width = 2.dp,
-            color = if (status)
+            color = if (onlineStatus)
                 MaterialTheme.colors.lightGreen
-            else
-                Color.Red
+            else Color.Red
         ),
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier
+            .padding(16.dp)
+            .size(imageSize),
         elevation = 4.dp
     ) {
-//
         Image(
-            painter = rememberAsyncImagePainter(
-                pictureUrl,
-                contentScale = ContentScale.Crop,
+            painter = rememberImagePainter(
+                data = pictureUrl,
+                builder = {
+                    transformations(CircleCropTransformation())
+                },
             ),
-            contentDescription = null,
-            modifier = Modifier.size(72.dp)
+            modifier = Modifier.size(72.dp),
+            contentDescription = "Profile picture description",
         )
-
     }
-
 }
 
 @Composable
-fun ProfileContent(name: String, status: Boolean) {
+fun ProfileContent(userName: String, onlineStatus: Boolean, alignment: Alignment.Horizontal) {
     Column(
         modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalAlignment = alignment
     ) {
-        Text(name, style = MaterialTheme.typography.h5)
-        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.disabled) {
+        CompositionLocalProvider(
+            LocalContentAlpha provides (
+                    if (onlineStatus)
+                        1f else ContentAlpha.medium)
+        ) {
             Text(
-                text = if (status)
+                text = userName,
+                style = MaterialTheme.typography.h5
+            )
+        }
+        CompositionLocalProvider(LocalContentAlpha provides (ContentAlpha.medium)) {
+            Text(
+                text = if (onlineStatus)
                     "Active now"
                 else "Offline",
                 style = MaterialTheme.typography.body2
             )
-
         }
+    }
 
+}
+
+
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+@Composable
+fun UserProfileDetailsScreen(userProfile: UserProfileDataClass = UserProfileList[0]) {
+    Scaffold(topBar = { AppBar() }) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                ProfilePicture(userProfile.pictureUrl, userProfile.status, 240.dp)
+                ProfileContent(userProfile.name, userProfile.status, Alignment.CenterHorizontally)
+            }
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
+fun UserProfileDetailsPreview() {
     MyTheme {
-        MainScreen()
+        UserProfileDetailsScreen()
+    }
+}
 
+@Preview(showBackground = true)
+@Composable
+fun UserListPreview() {
+    MyTheme {
+        UserListScreen()
     }
 }
