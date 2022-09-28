@@ -8,24 +8,11 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class MealsRepository(private val webService: MealsWebService = MealsWebService()) {
-    fun getMeals(successCallback: (response: MealsCategoriesResponse?) -> Unit) {
+   suspend fun getMeals():MealsCategoriesResponse {
 
         //return  webService.getMeals().execute().body()
         //execute will bloc the thread and execute in main thread and will crash since it wont allow to run on main thread
 
-        return webService.getMeals().enqueue(object : Callback<MealsCategoriesResponse> {
-            override fun onResponse(
-                call: Call<MealsCategoriesResponse>,
-                response: Response<MealsCategoriesResponse>,
-            ) {
-                if(response.isSuccessful){
-                    successCallback(response.body())
-                }
-
-            }
-            override fun onFailure(call: Call<MealsCategoriesResponse>, t: Throwable) {
-                TODO("Do it later")
-            }
-        })
+        return webService.getMeals();
     }
 }
