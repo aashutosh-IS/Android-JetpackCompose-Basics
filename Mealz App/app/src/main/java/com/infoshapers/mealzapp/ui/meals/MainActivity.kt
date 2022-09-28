@@ -30,20 +30,10 @@ class MainActivity : ComponentActivity() {
 fun MealsCategoriesScreen() {
     val viewModel: MealsCategoriesViewModel =
         viewModel() //after this instantiated, the vm will get destroyed after the composable is destroyed and wont get instantiated every time composable is rebuild
-    val rememberedMeals: MutableState<List<MealResponse>> = remember {
-        mutableStateOf(emptyList<MealResponse>())
-    }
-    val coroutineScope = rememberCoroutineScope()
-    LaunchedEffect(key1 = "GET_MEALS"){
-        coroutineScope.launch(Dispatchers.IO) {
-            val meals = viewModel.getMeals()
-            rememberedMeals.value = meals
-
-        }
-    }
+    val meals = viewModel.mealsState.value
 
     LazyColumn {
-        items(rememberedMeals.value) { meal ->
+        items(meals) { meal ->
             Text(text = meal.name)
 
         }
