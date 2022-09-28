@@ -16,7 +16,7 @@ class MealsCategoriesViewModel(private val repository: MealsRepository = MealsRe
     ViewModel() {
 
     init {
-        viewModelScope.launch() {
+        viewModelScope.launch(Dispatchers.IO) {
             val meals = getMeals()
             mealsState.value = meals
         }
